@@ -6,23 +6,26 @@ app.whenReady().then(() => {
   const primaryDisplay = screen.getPrimaryDisplay();
   const { width, height } = primaryDisplay.workAreaSize;
 
+  const windowWidth = 250; // Small width
+  const windowHeight = 50; // Extremely slim height
+
   win = new BrowserWindow({
-    width: 300,
-    height: height, // Full height of the screen
-    x: 0, // Pin to the left side
-    y: 0, 
-    alwaysOnTop: true, 
-    frame: false, 
-    transparent: true,
+    width: windowWidth,
+    height: windowHeight,
+    x: 0, // Top-left corner
+    y: 0, // Top-left corner
+    alwaysOnTop: true,
+    frame: false,
+    transparent: true, // Transparent by default
     resizable: false,
-    backgroundColor: "#00000000",
+    backgroundColor: "#00000000", // Fully transparent background
     webPreferences: {
       nodeIntegration: true,
     },
   });
 
-  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true }); // Stays on all virtual desktops
-  win.setAlwaysOnTop(true, "screen-saver"); // Ensures it stays above other windows
+  win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+  win.setAlwaysOnTop(true, "screen-saver");
   win.loadFile("index.html");
 
   // REMOVE DevTools entirely
@@ -42,9 +45,15 @@ app.on("window-all-closed", () => {
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     app.whenReady().then(() => {
+      const primaryDisplay = screen.getPrimaryDisplay();
+      const { width, height } = primaryDisplay.workAreaSize;
+
+      const windowWidth = 250;
+      const windowHeight = 50;
+
       win = new BrowserWindow({
-        width: 300,
-        height: screen.getPrimaryDisplay().workAreaSize.height,
+        width: windowWidth,
+        height: windowHeight,
         x: 0,
         y: 0,
         alwaysOnTop: true,

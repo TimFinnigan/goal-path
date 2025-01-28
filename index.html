@@ -7,8 +7,15 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: transparent;
+            background: transparent; /* Transparent by default */
             color: white;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            -webkit-app-region: drag; /* Make the entire window draggable */
         }
         .timeline {
             display: flex;
@@ -23,12 +30,25 @@
             border-radius: 5px;
         }
     </style>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const body = document.body;
+
+            // Show background on click
+            body.addEventListener("mousedown", () => {
+                body.style.background = "rgba(0, 0, 0, 0.8)"; // Visible dark background
+            });
+
+            // Hide background when releasing click
+            body.addEventListener("mouseup", () => {
+                body.style.background = "transparent"; // Go back to transparent
+            });
+        });
+    </script>
 </head>
 <body>
     <div class="timeline">
         <div class="goal">🎯 Finish building thing</div>
-        <div class="goal">💻 finish doing thing</div>
-        <div class="goal">📜 do the thing</div>
     </div>
 </body>
 </html>
