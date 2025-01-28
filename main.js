@@ -24,24 +24,31 @@ app.whenReady().then(() => {
     },
   });
 
+  // Enable visibility on all workspaces
   win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
   win.setAlwaysOnTop(true, "screen-saver");
+
+  // Load the app's main HTML file
   win.loadFile("index.html");
 
-  // REMOVE DevTools entirely
-  win.webContents.on("devtools-opened", () => {
+  // Remove DevTools in production
+  if (!app.isPackaged) {
+    win.webContents.on("devtools-opened", () => {
+      win.webContents.closeDevTools();
+    });
+  } else {
     win.webContents.closeDevTools();
-  });
+  }
 });
 
-// Quit app when all windows are closed (except macOS behavior)
+// Quit the app when all windows are closed (except for macOS behavior)
 app.on("window-all-closed", () => {
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-// macOS: Recreate window when clicking the dock icon
+// macOS: Recreate a window when the dock icon is clicked
 app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     app.whenReady().then(() => {
