@@ -1,0 +1,16 @@
+{
+  "name": "goal-path",
+  "version": "1.0.0",
+  "description": "A vertical goal tracker for macOS",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "package": "npx @electron/packager . GoalTracker --platform=darwin --arch=x64 --overwrite --out=dist"
+  },
+  "dependencies": {
+    "electron": "^26.0.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^17.1.1"
+  }
+}
