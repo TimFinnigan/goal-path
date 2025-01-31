@@ -3,6 +3,11 @@ const { app, BrowserWindow, ipcMain } = require("electron");
 let win;
 
 app.whenReady().then(() => {
+    // Show default Dock icon (only for macOS)
+    if (process.platform === "darwin") {
+        app.dock.show();
+    }
+
     win = new BrowserWindow({
         width: 250,
         height: 50,
@@ -15,7 +20,7 @@ app.whenReady().then(() => {
         backgroundColor: "#00000000",
         webPreferences: {
             nodeIntegration: true,
-            contextIsolation: false,  // Allow ipcRenderer to communicate
+            contextIsolation: false, // Required for IPC to work
         },
     });
 
@@ -23,10 +28,20 @@ app.whenReady().then(() => {
     win.setAlwaysOnTop(true, "screen-saver");
     win.loadFile("index.html");
 
-    // Ensure interactions are allowed
+    // Ensure window can receive mouse events
     win.setIgnoreMouseEvents(false);
+
+    // Fix possible focus issues on macOS
+    win.on("blur", () => {
+        win.setIgnoreMouseEvents(false);
+    });
+
+    win.on("focus", () => {
+        win.setIgnoreMouseEvents(false);
+    });
 });
 
+// Handle dragging from the renderer process
 ipcMain.on("move-window", (event, { deltaX, deltaY }) => {
     if (win) {
         const bounds = win.getBounds();
@@ -53,7 +68,7 @@ app.on("activate", () => {
                 height: 50,
                 x: 0,
                 y: 0,
-                alwaysOnTop: true,
+                alwaysOnTop: true, 
                 frame: false,
                 transparent: true,
                 resizable: false,
@@ -63,6 +78,7 @@ app.on("activate", () => {
                     contextIsolation: false,
                 },
             });
+
             win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
             win.setAlwaysOnTop(true, "screen-saver");
             win.loadFile("index.html");
