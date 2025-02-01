@@ -61,15 +61,15 @@
             cursor: grab; /* ✅ Allows dragging inside */
         }
 
-        /* ✅ Bottom-right corner resizable */
+        /* ✅ Much Smaller Resize Handle */
         #resize-handle {
-            width: 15px;
-            height: 15px;
+            width: 8px;  /* Smaller width */
+            height: 8px;  /* Smaller height */
             position: absolute;
-            bottom: 0;
-            right: 0;
+            bottom: 2px;  /* Slightly offset */
+            right: 2px;   /* Slightly offset */
             cursor: nwse-resize;
-            background: rgba(255, 255, 255, 0.5);
+            background: transparent;
             border-radius: 50%;
         }
     </style>
@@ -79,7 +79,7 @@
         <div class="goal-container">
             <textarea class="goal" id="goal-input" placeholder="Enter your goal"></textarea>
         </div>
-        <div id="resize-handle"></div> <!-- ✅ Resize Handle -->
+        <div id="resize-handle"></div> <!-- ✅ Smaller Resize Handle -->
     </div>
 
     <script>
