@@ -9,7 +9,7 @@ app.whenReady().then(() => {
 
     win = new BrowserWindow({
         width: 250,
-        height: 50,
+        height: 65,
         x: 0,
         y: 0,
         alwaysOnTop: true,
