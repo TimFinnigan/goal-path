@@ -58,6 +58,7 @@
             height: 100%; /* ✅ Auto-resizes */
             resize: none; /* Prevent default resizing */
             font-size: 1em;
+            cursor: grab; /* ✅ Allows dragging inside */
         }
 
         /* ✅ Bottom-right corner resizable */
@@ -76,7 +77,7 @@
 <body>
     <div class="wrapper" id="drag-area">
         <div class="goal-container">
-            <textarea class="goal" placeholder="Enter your goal"></textarea>
+            <textarea class="goal" id="goal-input" placeholder="Enter your goal"></textarea>
         </div>
         <div id="resize-handle"></div> <!-- ✅ Resize Handle -->
     </div>
@@ -87,22 +88,28 @@
         document.addEventListener("DOMContentLoaded", () => {
             const wrapper = document.getElementById("drag-area");
             const resizeHandle = document.getElementById("resize-handle");
-            const goalInput = document.querySelector(".goal");
+            const goalInput = document.getElementById("goal-input");
 
             let isDragging = false;
             let isResizing = false;
             let startX, startY, startWidth, startHeight;
 
-            // ✅ Dragging behavior (Click anywhere except resize handle)
-            wrapper.addEventListener("mousedown", (e) => {
-                if (e.target === resizeHandle || e.target === goalInput) return; // Prevent dragging when resizing or typing
+            // ✅ Dragging behavior (Click anywhere including inside input field)
+            function startDragging(e) {
+                if (e.target === resizeHandle) return; // Prevent dragging when resizing
                 isDragging = true;
                 startX = e.screenX;
                 startY = e.screenY;
                 wrapper.style.cursor = "grabbing";
-            });
+            }
 
-            document.addEventListener("mousemove", (e) => {
+            function stopDragging() {
+                isDragging = false;
+                isResizing = false;
+                wrapper.style.cursor = "grab";
+            }
+
+            function moveWindow(e) {
                 if (isDragging) {
                     ipcRenderer.send("move-window", {
                         deltaX: e.screenX - startX,
@@ -122,13 +129,13 @@
                     goalInput.style.width = `${newWidth - 20}px`;  // Adjust for padding
                     goalInput.style.height = `${newHeight - 20}px`;
                 }
-            });
+            }
 
-            document.addEventListener("mouseup", () => {
-                isDragging = false;
-                isResizing = false;
-                wrapper.style.cursor = "grab";
-            });
+            // ✅ Allow dragging inside the input field
+            goalInput.addEventListener("mousedown", startDragging);
+            wrapper.addEventListener("mousedown", startDragging);
+            document.addEventListener("mousemove", moveWindow);
+            document.addEventListener("mouseup", stopDragging);
 
             // ✅ Resizing behavior (Only bottom-right corner)
             resizeHandle.addEventListener("mousedown", (e) => {
