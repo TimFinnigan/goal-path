@@ -22,7 +22,7 @@
             justify-content: center;
             overflow: hidden;
             user-select: none;
-            cursor: grab; /* Default to grab */
+            cursor: grab;
         }
 
         .wrapper {
@@ -55,7 +55,8 @@
             height: 100%;
             resize: none;
             font-size: 1em;
-            cursor: grab;
+            cursor: text; /* ✅ Allows text selection */
+            user-select: text; /* ✅ Ensure selectable text */
         }
 
         #resize-handle {
@@ -96,7 +97,9 @@
             let startX, startY, startWidth, startHeight;
 
             function startDragging(e) {
-                if (e.target === resizeHandle) return; // Prevent dragging when resizing
+                // ✅ Prevent dragging if clicking inside input field
+                if (e.target === goalInput || e.target.closest(".goal")) return;
+
                 isDragging = true;
                 startX = e.screenX;
                 startY = e.screenY;
@@ -104,7 +107,6 @@
                 document.body.classList.add("grabbing");
                 wrapper.classList.add("grabbing");
 
-                // ✅ Force cursor update
                 document.body.style.cursor = "grabbing";
                 wrapper.style.cursor = "grabbing";
             }
@@ -116,7 +118,6 @@
                 document.body.classList.remove("grabbing");
                 wrapper.classList.remove("grabbing");
 
-                // ✅ Ensure cursor resets correctly
                 document.body.style.cursor = "grab";
                 wrapper.style.cursor = "grab";
             }
@@ -142,7 +143,7 @@
                 }
             }
 
-            goalInput.addEventListener("mousedown", startDragging);
+            // ✅ Attach dragging only to the wrapper (not inside the input field)
             wrapper.addEventListener("mousedown", startDragging);
             document.addEventListener("mousemove", moveWindow);
             document.addEventListener("mouseup", stopDragging);
