@@ -1,3 +1,54 @@
+// /Users/timfinnigan/Documents/GitHub/goal-path/renderer.js
+
+const fs = require("fs");
+const path = require("path");
+
+const filePath = path.join(__dirname, "goals.json");
+
+function loadGoals() {
+    if (fs.existsSync(filePath)) {
+        return JSON.parse(fs.readFileSync(filePath, "utf-8"));
+    }
+    return [];
+}
+
+function saveGoals(goals) {
+    fs.writeFileSync(filePath, JSON.stringify(goals, null, 2));
+}
+
+// Load existing goals
+document.addEventListener("DOMContentLoaded", () => {
+    const timeline = document.querySelector(".timeline");
+    const goals = loadGoals();
+
+    goals.forEach(goal => {
+        const goalDiv = document.createElement("div");
+        goalDiv.className = "goal";
+        goalDiv.textContent = `🟢 ${goal}`;
+        timeline.appendChild(goalDiv);
+    });
+
+    document.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+            const newGoal = prompt("Enter your new goal:");
+            if (newGoal) {
+                goals.unshift(newGoal);
+                saveGoals(goals);
+
+                const goalDiv = document.createElement("div");
+                goalDiv.className = "goal";
+                goalDiv.textContent = `🟢 ${newGoal}`;
+                timeline.prepend(goalDiv);
+            }
+        }
+    });
+});
+
+
+---
+
+// /Users/timfinnigan/Documents/GitHub/goal-path/index.html
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,7 +73,6 @@
             justify-content: center;
             overflow: hidden;
             user-select: none;
-            cursor: grab; /* Default to grab */
         }
 
         .wrapper {
@@ -33,6 +83,10 @@
             justify-content: center;
             cursor: grab;
             position: relative;
+        }
+
+        .wrapper:active {
+            cursor: grabbing;
         }
 
         .goal-container {
@@ -51,27 +105,23 @@
             color: white;
             border: none;
             outline: none;
-            width: 100%;
-            height: 100%;
-            resize: none;
+            width: 100%; /* ✅ Auto-resizes */
+            height: 100%; /* ✅ Auto-resizes */
+            resize: none; /* Prevent default resizing */
             font-size: 1em;
-            cursor: grab;
+            cursor: grab; /* ✅ Allows dragging inside */
         }
 
+        /* ✅ Much Smaller Resize Handle */
         #resize-handle {
-            width: 8px;
-            height: 8px;
+            width: 8px;  /* Smaller width */
+            height: 8px;  /* Smaller height */
             position: absolute;
-            bottom: 2px;
-            right: 2px;
+            bottom: 2px;  /* Slightly offset */
+            right: 2px;   /* Slightly offset */
             cursor: nwse-resize;
             background: transparent;
             border-radius: 50%;
-        }
-
-        /* ✅ Ensure grabbing cursor is properly applied */
-        .grabbing, .grabbing * {
-            cursor: grabbing !important;
         }
     </style>
 </head>
@@ -80,7 +130,7 @@
         <div class="goal-container">
             <textarea class="goal" id="goal-input" placeholder="Enter your goal"></textarea>
         </div>
-        <div id="resize-handle"></div>
+        <div id="resize-handle"></div> <!-- ✅ Smaller Resize Handle -->
     </div>
 
     <script>
@@ -95,29 +145,18 @@
             let isResizing = false;
             let startX, startY, startWidth, startHeight;
 
+            // ✅ Dragging behavior (Click anywhere including inside input field)
             function startDragging(e) {
                 if (e.target === resizeHandle) return; // Prevent dragging when resizing
                 isDragging = true;
                 startX = e.screenX;
                 startY = e.screenY;
-
-                document.body.classList.add("grabbing");
-                wrapper.classList.add("grabbing");
-
-                // ✅ Force cursor update
-                document.body.style.cursor = "grabbing";
                 wrapper.style.cursor = "grabbing";
             }
 
             function stopDragging() {
                 isDragging = false;
                 isResizing = false;
-
-                document.body.classList.remove("grabbing");
-                wrapper.classList.remove("grabbing");
-
-                // ✅ Ensure cursor resets correctly
-                document.body.style.cursor = "grab";
                 wrapper.style.cursor = "grab";
             }
 
@@ -137,16 +176,19 @@
 
                     ipcRenderer.send("resize-window", { width: newWidth, height: newHeight });
 
-                    goalInput.style.width = `${newWidth - 20}px`;
+                    // ✅ Dynamically resize input field
+                    goalInput.style.width = `${newWidth - 20}px`;  // Adjust for padding
                     goalInput.style.height = `${newHeight - 20}px`;
                 }
             }
 
+            // ✅ Allow dragging inside the input field
             goalInput.addEventListener("mousedown", startDragging);
             wrapper.addEventListener("mousedown", startDragging);
             document.addEventListener("mousemove", moveWindow);
             document.addEventListener("mouseup", stopDragging);
 
+            // ✅ Resizing behavior (Only bottom-right corner)
             resizeHandle.addEventListener("mousedown", (e) => {
                 e.preventDefault();
                 isResizing = true;
@@ -160,3 +202,73 @@
     </script>
 </body>
 </html>
+
+
+---
+
+// /Users/timfinnigan/Documents/GitHub/goal-path/main.js
+
+const { app, BrowserWindow, ipcMain } = require("electron");
+
+let win;
+
+app.whenReady().then(() => {
+    if (process.platform === "darwin") {
+        app.dock.show();
+    }
+
+    win = new BrowserWindow({
+        width: 250,
+        height: 65,
+        x: 0,
+        y: 0,
+        alwaysOnTop: true,
+        frame: false,
+        transparent: true,
+        resizable: true, // ✅ Allow resizing
+        backgroundColor: "#00000000",
+        webPreferences: {
+            nodeIntegration: true,
+            contextIsolation: false,
+        },
+    });
+
+    win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+    win.setAlwaysOnTop(true, "screen-saver");
+    win.loadFile("index.html");
+
+    win.setIgnoreMouseEvents(false);
+});
+
+// ✅ Allow renderer to get window size
+ipcMain.on("get-window-bounds", (event) => {
+    event.returnValue = win.getBounds();
+});
+
+// ✅ Resize window dynamically
+ipcMain.on("resize-window", (event, { width, height }) => {
+    if (win) {
+        win.setBounds({
+            x: win.getBounds().x,
+            y: win.getBounds().y,
+            width: Math.max(width, 150), // Minimum width
+            height: Math.max(height, 50), // Minimum height
+        });
+    }
+});
+
+// ✅ Handle window dragging
+ipcMain.on("move-window", (event, { deltaX, deltaY }) => {
+    if (win) {
+        const bounds = win.getBounds();
+        win.setBounds({
+            x: bounds.x + deltaX,
+            y: bounds.y + deltaY,
+            width: bounds.width,
+            height: bounds.height
+        });
+    }
+});
+
+
+---
